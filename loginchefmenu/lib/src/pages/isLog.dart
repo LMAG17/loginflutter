@@ -68,127 +68,39 @@ class _IsLogState extends State<IsLog> {
     return foto != null || name != null;
   }
 
-  void _editUser() async {
-    if (name != null) {
-      updateinfo.displayName = name;
-    }
-    if (foto != null) {
-      updateinfo.photoUrl = await uploadImage();
-    }
-    _profileBloc.add(UpdateUserProfile(userinfo: updateinfo));
-  }
-
   String oldPassword;
   String newPasswordOne;
   String newPasswordTwo;
 
   bool isButtonEnable() {
-    return newPasswordOne == newPasswordTwo;
+    return newPasswordOne != null && newPasswordOne == newPasswordTwo;
   }
 
-   _editPassword(String email)  {
-     BlocProvider.of<ProfileBloc>(context).add(ChangePassword(
-         email: email, oldPassword: oldPassword, newPassword: newPasswordOne));
+  _showError(BuildContext context, String message) {
+    Scaffold.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Row(
+            children: <Widget>[Text(message)],
+          ),
+        ),
+      );
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocListener<ProfileBloc, ProfileState>(
       listener: (context, state) {
-        if (state is EditPassword) {
-          if (state.isSubmitting) {
-            Scaffold.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(
-                  content: Row(
-                    children: <Widget>[
-                      Text("Actualizando Informacion"),
-                      CircularProgressIndicator()
-                    ],
-                  ),
-                ),
-              );
-          }
-          if (state.isFailure) {
-            Scaffold.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(
-                  content: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Fallo al Iniciar Sesión"),
-                      Icon(Icons.error),
-                    ],
-                  ),
-                  backgroundColor: Colors.red,
-                ),
-              );
-          }
-          if (state.isSuccess) {
-            BlocProvider.of<ProfileBloc>(context).add(ChangeToProfileContent());
-          } else {
-            Scaffold.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(
-                  content: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("no detecta el estado"),
-                      Icon(Icons.error),
-                    ],
-                  ),
-                  backgroundColor: Colors.red,
-                ),
-              );
-          }
+        print(state);
+        if (state is FailurePassword) {
+          _showError(context, state.message);
         }
-        if (state is TakePhotoAction) {
-          Widget cameraButton = FlatButton(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Icon(Icons.camera),
-                Text("Camara"),
-              ],
-            ),
-            onPressed: () {
-              getImage(ImageSource.camera);
-              Navigator.pop(context);
-            },
-          );
-          Widget galleryButton = FlatButton(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Icon(Icons.camera_roll),
-                Text("Galeria"),
-              ],
-            ),
-            onPressed: () {
-              getImage(ImageSource.gallery);
-              Navigator.pop(context);
-            },
-          );
-          AlertDialog alert = AlertDialog(
-            title: Text("Seleccionar una imagen"),
-            content: Text("¿De donde desea seleccionar su imagen?"),
-            actions: [
-              cameraButton,
-              galleryButton,
-            ],
-          );
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return alert;
-            },
-          );
-        }
+
+        if (state is TakePhotoAction) {}
       },
-      child: BlocBuilder<ProfileBloc, ProfileState>(builder: (context, state) {
+      child: BlocBuilder<ProfileBloc, ProfileState>(
+          builder: (BuildContext context, ProfileState state) {
         if (state is ProfileContent) {
           return SingleChildScrollView(
             child: Container(
@@ -200,7 +112,7 @@ class _IsLogState extends State<IsLog> {
                     top: MediaQuery.of(context).size.height * 0.1,
                     right: MediaQuery.of(context).size.height * 0.025,
                     child: Text(
-                      "Mi Perfil",
+                      "${state.title}",
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 32,
@@ -458,7 +370,7 @@ class _IsLogState extends State<IsLog> {
                     top: MediaQuery.of(context).size.height * 0.1,
                     right: MediaQuery.of(context).size.height * 0.025,
                     child: Text(
-                      "Mi Perfil",
+                      "${state.title}",
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 32,
@@ -584,7 +496,20 @@ class _IsLogState extends State<IsLog> {
                                     style: TextStyle(fontSize: 24),
                                   ),
                                 ),
-                                onPressed: isEditable() ? _editUser : null,
+                                onPressed: isEditable()
+                                    ? () async {
+                                        if (name != null) {
+                                          updateinfo.displayName = name;
+                                        }
+                                        if (foto != null) {
+                                          updateinfo.photoUrl =
+                                              await uploadImage();
+                                        }
+                                        BlocProvider.of<ProfileBloc>(context)
+                                            .add(UpdateUserProfile(
+                                                userinfo: updateinfo));
+                                      }
+                                    : null,
                               ),
                             ),
                           ],
@@ -597,7 +522,47 @@ class _IsLogState extends State<IsLog> {
                     left: MediaQuery.of(context).size.width * 0.33,
                     child: GestureDetector(
                       onTap: () {
-                        showAlertDialog(context);
+                        Widget cameraButton = FlatButton(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Icon(Icons.camera),
+                              Text("Camara"),
+                            ],
+                          ),
+                          onPressed: () {
+                            getImage(ImageSource.camera);
+                            Navigator.pop(context);
+                          },
+                        );
+                        Widget galleryButton = FlatButton(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Icon(Icons.camera_roll),
+                              Text("Galeria"),
+                            ],
+                          ),
+                          onPressed: () {
+                            getImage(ImageSource.gallery);
+                            Navigator.pop(context);
+                          },
+                        );
+                        AlertDialog alerta = AlertDialog(
+                          title: Text("Seleccionar una imagen"),
+                          content:
+                              Text("¿De donde desea seleccionar su imagen?"),
+                          actions: [
+                            cameraButton,
+                            galleryButton,
+                          ],
+                        );
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return alerta;
+                          },
+                        );
                       },
                       child: Container(
                         width: 50,
@@ -640,7 +605,7 @@ class _IsLogState extends State<IsLog> {
             ),
           );
         }
-        if (state is EditPassword) {
+        if (state is EditPassword  ) {
           return SingleChildScrollView(
             child: Container(
               height: MediaQuery.of(context).size.height,
@@ -651,7 +616,7 @@ class _IsLogState extends State<IsLog> {
                     top: MediaQuery.of(context).size.height * 0.1,
                     right: MediaQuery.of(context).size.height * 0.025,
                     child: Text(
-                      "Mi Perfil",
+                      "${state.title}",
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 32,
@@ -832,7 +797,13 @@ class _IsLogState extends State<IsLog> {
                                     ),
                                   ),
                                   onPressed: isButtonEnable()
-                                      ? _editPassword(state.email)
+                                      ? () {
+                                          BlocProvider.of<ProfileBloc>(context)
+                                              .add(ChangePassword(
+                                                  email: state.email,
+                                                  oldPassword: oldPassword,
+                                                  newPassword: newPasswordOne));
+                                        }
                                       : null,
                                 ),
                               ),
@@ -867,10 +838,6 @@ class _IsLogState extends State<IsLog> {
                 ],
               ),
             ),
-          );
-        } else {
-          return Center(
-            child: CircularProgressIndicator(),
           );
         }
       }),

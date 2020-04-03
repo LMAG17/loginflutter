@@ -8,27 +8,25 @@ import 'package:meta/meta.dart';
 import 'bloc.dart';
 
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
-  FirebaseUser _user;
   String name;
   String photoUrl;
   String email;
   String phoneNumber;
   ProfileBloc({@required FirebaseUser user})
       : assert(user != null),
-        _user = user,
         this.name = user.displayName,
         this.photoUrl = user.photoUrl,
         email = user.email,
         phoneNumber = user.phoneNumber;
   @override
-  ProfileState get initialState => ProfileContent(name,photoUrl,'Mi Perfil',email,phoneNumber);
+  ProfileState get initialState =>
+      ProfileContent(name, photoUrl, 'Mi Perfil', email, phoneNumber);
 
   @override
   Stream<ProfileState> mapEventToState(
     ProfileEvent event,
   ) async* {
-    if (event is ProfileEvent) {
-    }
+    if (event is ProfileEvent) {}
     if (event is ChangeToProfileContent) {
       yield ProfileContent(name, photoUrl, 'Mi Perfil', email, phoneNumber);
     }
@@ -37,13 +35,11 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     }
     if (event is ChangeToEditPassword) {
       yield EditPassword(
-          name: name,
-          photoUrl: photoUrl,
-          title: 'Cambiar Contraseña',
-          email: email,
-          isFailure: false,
-          isSubmitting: false,
-          isSuccess: false);
+        name: name,
+        photoUrl: photoUrl,
+        title: 'Cambiar Contraseña',
+        email: email,
+      );
     }
     if (event is UpdateUserProfile) {
       yield* _mapUpdateUserProfileToState(userinfo: event.userinfo);
@@ -64,7 +60,10 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     //yield Loading();
     try {
       await UserRepository().updateUser(userinfo);
-      //yield Success();
+      name = userinfo.displayName;
+      photoUrl = userinfo.photoUrl;
+      print(name + "===========================================" + photoUrl);
+      yield ProfileContent(name, photoUrl, 'Mi Perfil', email, phoneNumber);
     } catch (e) {
       //yield Failure(e);
     }
@@ -72,12 +71,19 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
   Stream<ProfileState> _mapChangePasswordToState(
       {String email, String oldPassword, String newPassword}) async* {
-    yield EditPassword.loading();
+    yield Loading();
+    //yield EditPassword(requestState: 'Loading');
     try {
       await UserRepository().changePassword(email, oldPassword, newPassword);
-      yield EditPassword.success();
+      yield Success();
     } catch (e) {
-      yield EditPassword.failure(message: e);
+      print('El resultado es un error' + e.toString());
+      yield FailurePassword(
+          name: name,
+          photoUrl: photoUrl,
+          title: 'Cambiar Contraseña',
+          email: email,
+          message: e.toString());
     }
   }
 }

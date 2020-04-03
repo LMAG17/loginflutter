@@ -96,17 +96,17 @@ class UserRepository {
           if (value != null && value.length > 0) {
             //En caso de que el email este vinculado, validar que este vinculado con google
             if (value.contains("google.com")) {
-              //En caso de que sea exitoso (Se debe informar al usuario) TODO
+              //En caso de que sea exitoso (Se debe informar al usuario) todo
               await _auth.signInWithCredential(credential).then((value) {
                 return _auth.currentUser();
               });
             }
-            //En caso de que el correo este vinculado pero no con la cuenta de google  (Se debe informar al usuario) TODO
+            //En caso de que el correo este vinculado pero no con la cuenta de google  (Se debe informar al usuario) todo
             else {
               throw ("Este correo ya se encuentra registrado, debes iniciar sesion para vincularlo con google");
             }
           }
-          //En caso de que no este vinculada se debe evitar que se sobrescriba  (Se debe informar al usuario) TODO
+          //En caso de que no este vinculada se debe evitar que se sobrescriba  (Se debe informar al usuario) todo
           else {
             throw ("Debes registrarte primero");
           }
@@ -135,13 +135,13 @@ class UserRepository {
           if (value != null) {
             //Se hace el enlace de cuentas (no requiere validar si ya existe, este metodo con facebook no sobrescribe la cuenta)
             await value.linkWithCredential(authCredential).then((value) {
-              //En caso de que haya sido exitoso (Se debe informar al usuario) TODO
+              //En caso de que haya sido exitoso (Se debe informar al usuario) todo
               print(
                 "Cuenta vinculada exitosamente.",
               );
               return _auth.currentUser();
             })
-                //En caso de que salga fallido (Se debe informar al usuario) TODO
+                //En caso de que salga fallido (Se debe informar al usuario) todo
                 .catchError((e) {
               switch (e.code) {
                 case "ERROR_WEAK_PASSWORD": //- If the password is not strong enough.
@@ -200,7 +200,7 @@ class UserRepository {
         break;
       //En caso de que ocurra algun error
       case FacebookLoginStatus.error:
-        //(Se debe informar al usuario) TODO
+        //(Se debe informar al usuario) todo
         throw (result.errorMessage);
         break;
     }
@@ -254,17 +254,17 @@ class UserRepository {
         }
         //En caso de que se presente un error iniciando sesion
         else {
-          //(Se debe informar al usuario) TODO
+          //(Se debe informar al usuario) todo
           throw ('Invalid code/invalid authentication');
         }
       }).catchError((error) {
-        //(Se debe informar al usuario) TODO
+        //(Se debe informar al usuario) todo
         throw ('Ocurrio un error');
       });
     };
     //En caso de que la verificacion falle
     final PhoneVerificationFailed verifiedFailed = (AuthException exception) {
-      //En caso de que ocurra un error haciedo la verificacion (Se debe informar al usuario) TODO
+      //En caso de que ocurra un error haciedo la verificacion (Se debe informar al usuario) todo
       if (exception.message.contains('not authorized'))
         throw ('No se encuentra autorizado para realizar esta accion.');
       else if (exception.message.contains('Network'))
@@ -300,7 +300,7 @@ class UserRepository {
             .add(LoggedInWithOutEmail());
       }
     }).catchError((onError) {
-      //(Se debe informar al usuario) TODO
+      //(Se debe informar al usuario) todo
       throw ('Algo salio mal, por favor intentalo de nuevo');
     });
   }

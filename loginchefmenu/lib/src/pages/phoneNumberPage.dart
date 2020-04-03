@@ -66,17 +66,17 @@ class _PhoneNumberPageState extends State<PhoneNumberPage> {
         }
         //En caso de que se presente un error iniciando sesion
         else {
-          //(Se debe informar al usuario) TODO
+          //(Se debe informar al usuario) todo
           print('Invalid code/invalid authentication');
         }
       }).catchError((error) {
-        //(Se debe informar al usuario) TODO
+        //(Se debe informar al usuario) todo
         print('Ocurrio un error');
       });
     };
     //En caso de que la verificacion falle
     final PhoneVerificationFailed verifiedFailed = (AuthException exception) {
-      //En caso de que ocurra un error haciedo la verificacion (Se debe informar al usuario) TODO
+      //En caso de que ocurra un error haciedo la verificacion (Se debe informar al usuario) todo
       if (exception.message.contains('not authorized'))
         print('No se encuentra autorizado para realizar esta accion.' +
             exception.message);
@@ -113,7 +113,7 @@ class _PhoneNumberPageState extends State<PhoneNumberPage> {
             .add(LoggedInWithOutEmail());
       }
     }).catchError((onError) {
-      //(Se debe informar al usuario) TODO
+      //(Se debe informar al usuario) todo
       print('Algo salio mal, por favor intentalo de nuevo');
     });
   }
