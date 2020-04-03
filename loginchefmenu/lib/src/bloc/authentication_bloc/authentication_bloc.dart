@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:loginchefmenu/src/repository/user_repository.dart';
 import 'package:meta/meta.dart';
 import 'bloc.dart';
@@ -19,7 +20,7 @@ class AuthenticationBloc
       yield* _mapAppStartedToState();
     }
     if (event is LoggedIn) {
-      yield* _mapLoggedInToState();
+      yield*  _mapLoggedInToState();
     }
     if (event is LoggedInWithOutEmail) {
       yield* _mapLoggedInWithOutEmailToState();
@@ -35,7 +36,7 @@ class AuthenticationBloc
       if (isSignedIn) {
         final user = await _userRepository.getUser();
         if (user.email != null) {
-          yield Authenticated(user);
+          yield Authenticated(user: user);
         } else {
           yield AuthenticatedWithOutEmail();
         }
@@ -48,7 +49,8 @@ class AuthenticationBloc
   }
 
   Stream<AuthenticationState> _mapLoggedInToState() async* {
-    yield Authenticated(await _userRepository.getUser());
+    FirebaseUser user = await _userRepository.getUser();
+    yield Authenticated(user: user);
   }
 
   Stream<AuthenticationState> _mapLoggedInWithOutEmailToState() async* {

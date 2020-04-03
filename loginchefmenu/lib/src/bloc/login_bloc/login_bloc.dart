@@ -48,14 +48,6 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     if (event is LoginWithPhoneSucces) {
       yield* _mapLoginWithPhoneSuccess();
     }
-    if(event is ChangePassword){
-      yield* _mapChangePasswordToState(email:event.email,oldPassword:event.oldPassword,newPassword:event.newPassword);
-    }
-    if(event is UpdateUserProfile){
-      yield* _mapUpdateUserProfileToState(
-        userinfo:event.userinfo
-      );
-    }
     if (event is LoginWithEmailAndPassword) {
       yield* _mapLoginWithEmailAndPasswordToState(
           email: event.email, password: event.password);
@@ -90,24 +82,6 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       yield LoginState.success();
     } catch (e) {
       print(e);
-      yield LoginState.failure();
-    }
-  }
-  Stream<LoginState>_mapChangePasswordToState({String email,String oldPassword,String newPassword})async*{
-    yield LoginState.loading();
-    try {
-      await _userRepository.changePassword(email, oldPassword, newPassword);
-      yield LoginState.success();
-    } catch (_) {
-      yield LoginState.failure();
-    }
-  }
-  Stream<LoginState>_mapUpdateUserProfileToState({UserUpdateInfo userinfo})async*{
-    yield LoginState.loading();
-    try {
-      await _userRepository.updateUser(userinfo);
-      yield LoginState.success();
-    } catch (_) {
       yield LoginState.failure();
     }
   }

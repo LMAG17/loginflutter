@@ -162,7 +162,7 @@ class _PersonalDataState extends State<PersonalData> {
                     left: MediaQuery.of(context).size.width * 0.08,
                     top: MediaQuery.of(context).size.height * 0.22,
                     child: Container(
-                      height: MediaQuery.of(context).size.height * 0.5,
+                      height: MediaQuery.of(context).size.height * 0.7,
                       width: MediaQuery.of(context).size.width * 0.8,
                       child: Theme(
                         data: ThemeData(
@@ -221,7 +221,7 @@ class _PersonalDataState extends State<PersonalData> {
                               ),
                             ),
                             SizedBox(
-                              height: 8,
+                              height: 32,
                             ),
                             TextField(
                               onChanged: (v) {

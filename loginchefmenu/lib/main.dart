@@ -4,10 +4,10 @@ import 'package:loginchefmenu/src/bloc/authentication_bloc/authentication_bloc.d
 import 'package:loginchefmenu/src/bloc/authentication_bloc/authentication_event.dart';
 import 'package:loginchefmenu/src/bloc/authentication_bloc/authentication_state.dart';
 import 'package:loginchefmenu/src/bloc/authentication_bloc/simple_bloc_delegate.dart';
-import 'package:loginchefmenu/src/pages/isLog.dart';
 import 'package:loginchefmenu/src/repository/user_repository.dart';
-import 'package:loginchefmenu/src/ui/personal_data_screen.dart';
 import 'package:loginchefmenu/src/ui/login_screen.dart';
+import 'package:loginchefmenu/src/ui/personal_data_screen.dart';
+import 'package:loginchefmenu/src/ui/profile_screen.dart';
 import 'package:loginchefmenu/src/ui/splash_screen.dart';
 
 void main() {
@@ -43,7 +43,7 @@ class App extends StatelessWidget {
           return PersonalDataScreen(userRepository: _userRepository,);
         } 
          if (state is Authenticated) {
-          return IsLog(user:state.user);
+          return ProfileScreen(user:state.user);
         } 
         if(state is Unauthenticated){
           return LoginScreen(userRepository: _userRepository,);

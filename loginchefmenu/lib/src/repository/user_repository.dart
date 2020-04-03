@@ -35,18 +35,18 @@ class UserRepository {
       idToken: googleAuth.idToken,
     );
     //Validar si existe un usuario autenticado
-    _auth.currentUser().then((value) {
+    _auth.currentUser().then((value) async {
       //En caso de que este intentando vincular la cuenta
       if (value != null) {
         //en caso de que el email que intenta vincular sea el mismo que ya esta dentro
         if (googleUser.email == value.email) {
           //enlace de las cuentas (requiere de un inicio de sesion reciente)
-          value.linkWithCredential(credential).then((value) {
+          await value.linkWithCredential(credential).then((value) {
             //Aqui debe mostrar la alerta de que todo fue exitoso
             print(
               "Cuenta vinculada exitosamente.",
             );
-            return value;
+            return _auth.currentUser();
           })
               //Aqui debe informar al usuario que se produjo un error
               .catchError((e) {
@@ -89,14 +89,16 @@ class UserRepository {
       //En caso que desee iniciar sesion con la cuenta
       else {
         //Es necesario validar si el email ya existe con el fin de evitar que google sobrescriba las cuentas
-        _auth.fetchSignInMethodsForEmail(email: googleUser.email).then((value) {
+        _auth
+            .fetchSignInMethodsForEmail(email: googleUser.email)
+            .then((value) async {
           //En caso de que si este vinculada anteriormente
           if (value != null && value.length > 0) {
             //En caso de que el email este vinculado, validar que este vinculado con google
             if (value.contains("google.com")) {
               //En caso de que sea exitoso (Se debe informar al usuario) TODO
-              _auth.signInWithCredential(credential).then((value) {
-                return value;
+              await _auth.signInWithCredential(credential).then((value) {
+                return _auth.currentUser();
               });
             }
             //En caso de que el correo este vinculado pero no con la cuenta de google  (Se debe informar al usuario) TODO
@@ -132,12 +134,12 @@ class UserRepository {
           //En caso de que haya un usuario logueado
           if (value != null) {
             //Se hace el enlace de cuentas (no requiere validar si ya existe, este metodo con facebook no sobrescribe la cuenta)
-            value.linkWithCredential(authCredential).then((value) {
+            await value.linkWithCredential(authCredential).then((value) {
               //En caso de que haya sido exitoso (Se debe informar al usuario) TODO
               print(
                 "Cuenta vinculada exitosamente.",
               );
-              return value;
+              return _auth.currentUser();
             })
                 //En caso de que salga fallido (Se debe informar al usuario) TODO
                 .catchError((e) {
@@ -168,14 +170,16 @@ class UserRepository {
             //Se debe obtener el email de la persona desde graph de facebook
             final faceEmail = await getProfile(facebookAccessToken);
             //Se verifica que el email se encuentre enlazado a otras cuetas
-            _auth.fetchSignInMethodsForEmail(email: faceEmail).then((value) {
+            _auth
+                .fetchSignInMethodsForEmail(email: faceEmail)
+                .then((value) async {
               //En caso de que se encuentre enlazado
               if (value != null && value.length > 0) {
                 //En caso de que este enlazado con facebook
                 if (value.contains("facebook.com")) {
                   //Se realiza el inicio de sesion
-                  _auth.signInWithCredential(authCredential).then((user) {
-                    return user;
+                  await _auth.signInWithCredential(authCredential).then((user) {
+                    return _auth.currentUser();
                   });
                 }
                 //En caso de que el email no se encuentre enlazado
@@ -230,8 +234,9 @@ class UserRepository {
       phoneVerificationId = verId;
     };
     //En caso de que la verificacion sea exitosa
-    final PhoneVerificationCompleted verifiedSuccess = (AuthCredential auth) {
-      _auth.signInWithCredential(auth).then((value) {
+    final PhoneVerificationCompleted verifiedSuccess =
+        (AuthCredential auth) async {
+      await _auth.signInWithCredential(auth).then((value) {
         //Se verifica que la respuesta sea positiva
         if (value.user != null) {
           //Se verifica que este enlazado a un email
@@ -277,19 +282,20 @@ class UserRepository {
       verificationFailed: verifiedFailed,
     );
   }
+
 //Metodo para iniciar sesion ingresando el codigo manualmente
   Future<void> signInWithPhoneNumber(context) async {
     //Se obtienen las credeciales del proveedor de numero telefonico
     final phoneCredential = PhoneAuthProvider.getCredential(
         verificationId: phoneVerificationId, smsCode: smsCode);
-    //Inicio de sesion con numero de telefono 
-    _auth.signInWithCredential(phoneCredential).then((value) {
+    //Inicio de sesion con numero de telefono
+    await _auth.signInWithCredential(phoneCredential).then((value) {
       //Se valida si la cuenta tiene un email asociado
       if (value.user.email != null) {
         //Se le notifica al bloc el inicio de sesion exitoso
         BlocProvider.of<AuthenticationBloc>(context).add(LoggedIn());
       } else {
-        //Se le notifica al bloc para que lo dirija a los datos personales 
+        //Se le notifica al bloc para que lo dirija a los datos personales
         BlocProvider.of<AuthenticationBloc>(context)
             .add(LoggedInWithOutEmail());
       }
@@ -300,13 +306,8 @@ class UserRepository {
   }
 
   //Inicio se sesion
-  Future<void> logInEmail(String email, String password) async {
-    return await _auth
-        .signInWithEmailAndPassword(email: email, password: password)
-        .then((u) {})
-        .catchError((e) {
-      throw (e);
-    });
+  Future<void> logInEmail(String email, String password) {
+    return _auth.signInWithEmailAndPassword(email: email, password: password);
   }
 
   //Registro
@@ -353,8 +354,8 @@ class UserRepository {
   //Cambio de contraseña
   Future changePassword(
       String email, String oldPassword, String newPassword) async {
-    final AuthResult result = await _auth.signInWithEmailAndPassword(
-        email: email, password: oldPassword)
+    final AuthResult result = await _auth
+        .signInWithEmailAndPassword(email: email, password: oldPassword)
         .catchError((e) => throw (e));
     return await result.user
         .updatePassword(newPassword)

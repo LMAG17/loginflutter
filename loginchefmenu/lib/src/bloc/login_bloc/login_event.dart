@@ -72,33 +72,6 @@ class LoginWithPhone extends LoginEvent {
 }
 
 class LoginWithPhoneSucces extends LoginEvent {}
-//change password
-class ChangePassword extends LoginEvent{
-  final String email;
-  final String oldPassword;
-  final String newPassword;
-
-  const ChangePassword({@required this.email, @required this.oldPassword, @required this.newPassword});
-  @override
-  List<Object> get props=>[email,oldPassword,newPassword];
-  @override 
-  String toString(){
-    return 'ChangePassword {email:$email,oldpassword:$oldPassword,newpassword:$newPassword}';
-  }
-}
-//Update info
-class UpdateUserProfile extends LoginEvent{
-  final UserUpdateInfo userinfo;
-
-  const UpdateUserProfile({@required this.userinfo});
-  @override
-  List<Object> get props=>[userinfo];
-  @override
-  String toString(){
-    return 'UpdateUserProfile {userinfo:$userinfo}';
-  }
-
-}
 //Login with email
 class LoginWithEmailAndPassword extends LoginEvent {
   final String email;
