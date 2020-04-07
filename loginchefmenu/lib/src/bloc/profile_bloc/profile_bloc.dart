@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:bloc/bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,6 +15,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   String phoneNumber;
   bool faceLink = false;
   bool googleLink = false;
+  File fotoPerfil;
   UserRepository _userRepository;
   UserUpdateInfo updateinfo = UserUpdateInfo();
   ProfileBloc(
@@ -36,11 +38,13 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       yield* _mapLoadProviders();
     }
     if (event is ChangeToProfileContent) {
-      yield ProfileContent(name, photoUrl, 'Mi Perfil', email, phoneNumber,
-          faceLink, googleLink);
+      yield ProfileContent(
+          name, photoUrl, 'Mi Perfil', email, phoneNumber, faceLink, googleLink,
+          foto: fotoPerfil);
     }
     if (event is ChangeToEditProfileContent) {
-      yield EditProfileContent(name, photoUrl, 'Editar mi Perfil', updateinfo);
+      yield EditProfileContent(name, photoUrl, 'Editar mi Perfil', updateinfo,
+          foto: fotoPerfil);
     }
     if (event is ChangeToEditPassword) {
       yield EditPassword(
@@ -48,13 +52,17 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         photoUrl: photoUrl,
         title: 'Cambiar Contraseña',
         email: email,
+        foto: fotoPerfil,
       );
     }
     if (event is TakePhotoAction) {
       yield TakePhotoActionState();
     }
+    if (event is TakePhotoActionSuccess) {
+      yield* _mapTakePhotoActionSuccessToState(event.foto);
+    }
     if (event is UpdateUserProfile) {
-      yield* _mapUpdateUserProfileToState(userinfo: event.userinfo);
+      yield* _mapUpdateUserProfileToState(event.name, event.foto);
     }
     if (event is ChangePassword) {
       yield* _mapChangePasswordToState(
@@ -86,13 +94,26 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     }
   }
 
+  Stream<ProfileState> _mapTakePhotoActionSuccessToState(File foto) async* {
+    fotoPerfil = foto;
+    yield EditProfileContent(name, photoUrl, 'Editar mi Perfil', updateinfo,
+        foto: fotoPerfil);
+  }
+
   Stream<ProfileState> _mapUpdateUserProfileToState(
-      {UserUpdateInfo userinfo}) async* {
+      String newname, File foto) async* {
     yield Loading();
+    if (newname != null) {
+      updateinfo.displayName = newname;
+    }
+    if (foto != null) {
+      updateinfo.photoUrl = await _userRepository.uploadImage(foto);
+    }
     try {
-      await _userRepository.updateUser(userinfo);
-      name = userinfo.displayName;
-      photoUrl = userinfo.photoUrl;
+      await _userRepository.updateUser(updateinfo);
+      name = updateinfo.displayName;
+      photoUrl = updateinfo.photoUrl;
+      fotoPerfil = foto;
       print(name + "===========================================" + photoUrl);
       yield Success();
     } catch (e) {
@@ -126,9 +147,9 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       }
     } else if (provider == 'facebook.com') {
       try {
-         print('intenta con facebook');
-         _userRepository.loginWithFacebook();
-         faceLink = true;
+        print('intenta con facebook');
+        _userRepository.loginWithFacebook();
+        faceLink = true;
         yield Success();
       } catch (e) {
         if (e.contains("ERROR_REQUIRES_RECENT_LOGIN")) {

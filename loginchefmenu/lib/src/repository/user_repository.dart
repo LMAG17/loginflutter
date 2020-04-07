@@ -1,7 +1,9 @@
 //imports
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -346,4 +348,15 @@ class UserRepository {
       throw (e.code);
     });
   }
+  
+  Future<String> uploadImage(File foto) async {
+    final StorageReference postImageRef =
+        FirebaseStorage.instance.ref().child('Post Image');
+    var timeKey = DateTime.now();
+    final StorageUploadTask uploadTask =
+        postImageRef.child(timeKey.toString() + ".jpg").putFile(foto);
+    var url = await (await uploadTask.onComplete).ref.getDownloadURL();
+    return url;
+  }
+
 }

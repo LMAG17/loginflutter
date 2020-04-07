@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_auth_buttons/flutter_auth_buttons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,38 +25,12 @@ class _IsLogState extends State<IsLog> {
     fontSize: 20,
   );
   String url;
-  File foto;
-  getImage(ImageSource origen) async {
-    foto = await ImagePicker.pickImage(source: origen);
-    if (foto != null) {}
-    setState(() {});
-  }
-
-  Future<String> uploadImage() async {
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Row(
-              children: <Widget>[
-                Text("Subiendo imagen"),
-                CircularProgressIndicator(),
-              ],
-            ),
-          );
-        });
-    final StorageReference postImageRef =
-        FirebaseStorage.instance.ref().child('Post Image');
-    var timeKey = DateTime.now();
-    final StorageUploadTask uploadTask =
-        postImageRef.child(timeKey.toString() + ".jpg").putFile(foto);
-    url = await (await uploadTask.onComplete).ref.getDownloadURL();
-    Navigator.of(context).pop();
-    return url;
+  Future<File> getImage(ImageSource origen) async {
+    return await ImagePicker.pickImage(source: origen);
   }
 
   bool isEditable(EditProfileContent state) {
-    return foto != null || state.updateinfo.displayName != null;
+    return state.foto != null || state.updateinfo.displayName != null;
   }
 
   bool isButtonEnable(
@@ -156,7 +129,9 @@ class _IsLogState extends State<IsLog> {
                   content: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Text(state.message),
+                      Text(state.message != null
+                          ? state.message
+                          : 'Se ha producido un error'),
                       Icon(Icons.error),
                     ],
                   ),
@@ -174,7 +149,15 @@ class _IsLogState extends State<IsLog> {
               ],
             ),
             onPressed: () {
-              getImage(ImageSource.camera);
+              getImage(ImageSource.camera).then((foto) {
+                if (foto != null) {
+                  BlocProvider.of<ProfileBloc>(context)
+                      .add(TakePhotoActionSuccess(foto));
+                } else {
+                  BlocProvider.of<ProfileBloc>(context)
+                      .add(TakePhotoActionDissmis());
+                }
+              });
               Navigator.pop(context);
             },
           );
@@ -187,7 +170,15 @@ class _IsLogState extends State<IsLog> {
               ],
             ),
             onPressed: () {
-              getImage(ImageSource.gallery);
+              getImage(ImageSource.gallery).then((foto) {
+                if (foto != null) {
+                  BlocProvider.of<ProfileBloc>(context)
+                      .add(TakePhotoActionSuccess(foto));
+                } else {
+                  BlocProvider.of<ProfileBloc>(context)
+                      .add(TakePhotoActionDissmis());
+                }
+              });
               Navigator.pop(context);
             },
           );
@@ -239,31 +230,37 @@ class _IsLogState extends State<IsLog> {
                       child: Container(
                         height: 160,
                         width: 160,
-                        child: CachedNetworkImage(
-                          imageUrl: "${state.photoUrl}",
-                          imageBuilder: (context, imageProvider) => Container(
-                            decoration: BoxDecoration(
-                              image: DecorationImage(
-                                image: imageProvider,
-                                fit: BoxFit.cover,
+                        child: state.foto != null
+                            ? CircleAvatar(
+                                backgroundImage: AssetImage(state.foto.path),
+                              )
+                            : CachedNetworkImage(
+                                imageUrl: "${state.photoUrl}",
+                                imageBuilder: (context, imageProvider) =>
+                                    Container(
+                                  decoration: BoxDecoration(
+                                    image: DecorationImage(
+                                      image: imageProvider,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                                placeholder: (context, url) =>
+                                    Shimmer.fromColors(
+                                  baseColor: Colors.grey.shade300,
+                                  highlightColor: Colors.white,
+                                  child: Container(
+                                    height: 160,
+                                    width: 160,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(180),
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) =>
+                                    Icon(Icons.error),
                               ),
-                            ),
-                          ),
-                          placeholder: (context, url) => Shimmer.fromColors(
-                            baseColor: Colors.grey.shade300,
-                            highlightColor: Colors.white,
-                            child: Container(
-                              height: 160,
-                              width: 160,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(180),
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                          errorWidget: (context, url, error) =>
-                              Icon(Icons.error),
-                        ),
                       ),
                     ),
                   ),
@@ -506,9 +503,9 @@ class _IsLogState extends State<IsLog> {
                       child: Container(
                         height: 160,
                         width: 160,
-                        child: foto != null
+                        child: state.foto != null
                             ? CircleAvatar(
-                                backgroundImage: AssetImage(foto.path),
+                                backgroundImage: AssetImage(state.foto.path),
                               )
                             : CachedNetworkImage(
                                 imageUrl: "${state.photoUrl}",
@@ -625,19 +622,10 @@ class _IsLogState extends State<IsLog> {
                                 ),
                                 onPressed: isEditable(state)
                                     ? () async {
-                                        if (state.updateinfo.displayName !=
-                                            null) {
-                                          state.updateinfo.displayName =
-                                              state.updateinfo.displayName;
-                                        }
-                                        if (foto != null) {
-                                          state
-                                            ..updateinfo.photoUrl =
-                                                await uploadImage();
-                                        }
                                         BlocProvider.of<ProfileBloc>(context)
                                             .add(UpdateUserProfile(
-                                                userinfo: state.updateinfo));
+                                                state.updateinfo.displayName,
+                                                state.foto));
                                       }
                                     : null,
                               ),
@@ -721,31 +709,37 @@ class _IsLogState extends State<IsLog> {
                       child: Container(
                         height: 160,
                         width: 160,
-                        child: CachedNetworkImage(
-                          imageUrl: "${state.photoUrl}",
-                          imageBuilder: (context, imageProvider) => Container(
-                            decoration: BoxDecoration(
-                              image: DecorationImage(
-                                image: imageProvider,
-                                fit: BoxFit.cover,
+                        child: state.foto != null
+                            ? CircleAvatar(
+                                backgroundImage: AssetImage(state.foto.path),
+                              )
+                            : CachedNetworkImage(
+                                imageUrl: "${state.photoUrl}",
+                                imageBuilder: (context, imageProvider) =>
+                                    Container(
+                                  decoration: BoxDecoration(
+                                    image: DecorationImage(
+                                      image: imageProvider,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                                placeholder: (context, url) =>
+                                    Shimmer.fromColors(
+                                  baseColor: Colors.grey.shade300,
+                                  highlightColor: Colors.white,
+                                  child: Container(
+                                    height: 160,
+                                    width: 160,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(180),
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) =>
+                                    Icon(Icons.error),
                               ),
-                            ),
-                          ),
-                          placeholder: (context, url) => Shimmer.fromColors(
-                            baseColor: Colors.grey.shade300,
-                            highlightColor: Colors.white,
-                            child: Container(
-                              height: 160,
-                              width: 160,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(180),
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                          errorWidget: (context, url, error) =>
-                              Icon(Icons.error),
-                        ),
                       ),
                     ),
                   ),

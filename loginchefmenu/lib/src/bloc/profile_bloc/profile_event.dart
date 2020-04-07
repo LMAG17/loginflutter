@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:equatable/equatable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -21,14 +23,15 @@ class ChangeToEditProfileContent extends ProfileEvent {}
 class ChangeToEditPassword extends ProfileEvent {}
 
 class UpdateUserProfile extends ProfileEvent {
-  final UserUpdateInfo userinfo;
+  final String name;
+  final File foto;
 
-  const UpdateUserProfile({@required this.userinfo});
+  const UpdateUserProfile(this.name, this.foto,);
   @override
-  List<Object> get props => [userinfo];
+  List<Object> get props => [name,foto];
   @override
   String toString() {
-    return 'ChangeToProfileContent {userinfo:$userinfo}';
+    return 'ChangeToProfileContent {name:$name, foto:$foto} ';
   }
 }
 
@@ -87,6 +90,11 @@ class ReAuthentication extends ProfileEvent {
 
 class TakePhotoAction extends ProfileEvent {}
 
-class TakePhotoActionSuccess extends ProfileEvent {}
+class TakePhotoActionSuccess extends ProfileEvent {
+  final File foto;
+
+  TakePhotoActionSuccess(this.foto);
+
+}
 
 class TakePhotoActionDissmis extends ProfileEvent {}
