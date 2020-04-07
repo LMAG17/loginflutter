@@ -108,6 +108,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   }
 
   Stream<LoginState> _mapLoginWithGoogleToState() async* {
+    LoginState.loading();
     try {
       await _userRepository.signInWithGoogle();
       yield LoginState.success();
@@ -117,11 +118,11 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   }
 
   Stream<LoginState> _mapLoginWithFacebookToState() async* {
+    LoginState.loading();
     try {
       await _userRepository.loginWithFacebook();
       yield LoginState.success();
     } catch (e) {
-      print(e);
       yield LoginState.failure();
     }
   }

@@ -34,3 +34,8 @@ class Unauthenticated extends AuthenticationState{
   @override
   String toString() => 'No Autenticado';
 }
+//No autentocadp -> Other Methods
+class OtherMethodsState extends AuthenticationState{
+  @override
+  String toString() => 'No Autenticado';
+}

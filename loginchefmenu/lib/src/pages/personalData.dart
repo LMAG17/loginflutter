@@ -214,11 +214,8 @@ class _PersonalDataState extends State<PersonalData> {
                               },
                               child: CircleAvatar(
                                 maxRadius: 80,
-                                backgroundImage: foto != null
-                                    ? AssetImage(foto.path)
-                                    : NetworkImage(
-                                        "https://thumbs.dreamstime.com/z/restaurante-logotipo-del-vector-del-caf%C3%A9-men%C3%BA-plato-comida-o-cocinero-icono-del-cocinero-69996518.jpg"),
-                              ),
+                                backgroundImage: AssetImage(foto!= null?foto.path:'assets/img/profile.jpeg')
+                                    ),
                             ),
                             SizedBox(
                               height: 32,

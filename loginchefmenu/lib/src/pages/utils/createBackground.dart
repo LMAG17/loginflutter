@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'dart:ui';
 import 'dart:math' as math;
 
@@ -26,10 +25,10 @@ class CreateBackground {
         Positioned(
           top: -MediaQuery.of(context).size.height * 0.06,
           left: -MediaQuery.of(context).size.width * 0.19,
-          child: CircleAvatar(
-            maxRadius: 180,
-            backgroundImage: NetworkImage(
-                "https://previews.123rf.com/images/seamartini/seamartini1702/seamartini170200159/70978472-cartel-de-comida-r%C3%A1pida-en-forma-redonda-con-aperitivos-vector-comida-de-hamburguesas-con-queso-y-pizz.jpg"),
+          child: Container(           
+            width: 360, 
+            height: 360,
+             child: Image.asset('assets/img/1.jpeg'),
           ),
         ),
         Positioned(

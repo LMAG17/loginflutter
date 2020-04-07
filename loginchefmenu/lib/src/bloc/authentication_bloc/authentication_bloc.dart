@@ -28,6 +28,9 @@ class AuthenticationBloc
     if (event is LoggedOut) {
       yield* _mapLoggedOutToState();
     }
+    if(event is OtherMethods){
+      yield* _mapOtherMethodsToState();
+    }
   }
 
   Stream<AuthenticationState> _mapAppStartedToState() async* {
@@ -59,5 +62,10 @@ class AuthenticationBloc
 
   Stream<AuthenticationState> _mapLoggedOutToState() async* {
     yield Unauthenticated();
+  }
+  
+  
+  Stream<AuthenticationState> _mapOtherMethodsToState() async* {
+    yield OtherMethodsState();
   }
 }

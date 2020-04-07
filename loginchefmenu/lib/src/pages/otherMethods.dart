@@ -5,7 +5,6 @@ import 'package:loginchefmenu/src/bloc/authentication_bloc/bloc.dart';
 import 'package:loginchefmenu/src/bloc/login_bloc/bloc.dart';
 import 'package:loginchefmenu/src/pages/utils/createBackground.dart';
 import 'package:loginchefmenu/src/repository/user_repository.dart';
-import 'package:loginchefmenu/src/ui/login_screen.dart';
 
 class OtherMethods extends StatefulWidget {
   final UserRepository _userRepository;
@@ -120,11 +119,8 @@ class _OtherMethodsState extends State<OtherMethods> {
                       children: <Widget>[
                         GestureDetector(
                           onTap: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => LoginScreen(
-                                        userRepository: _userRepository)));
+                            BlocProvider.of<AuthenticationBloc>(context)
+                                .add(LoggedOut());
                           },
                           child: Icon(
                             Icons.arrow_back_ios,
@@ -217,7 +213,8 @@ class _OtherMethodsState extends State<OtherMethods> {
                                     context: context,
                                     builder: (BuildContext context) {
                                       return AlertDialog(
-                                        title: Text("Enviaremos un correo de verificacion"),
+                                        title: Text(
+                                            "Enviaremos un correo de verificacion"),
                                         content: Form(
                                           child: Column(
                                             mainAxisSize: MainAxisSize.min,
@@ -267,8 +264,12 @@ class _OtherMethodsState extends State<OtherMethods> {
                                                 child: RaisedButton(
                                                   child: Text("Aceptar"),
                                                   onPressed: () {
-                                                    if(_emailController.text.isNotEmpty){
-                                                      _userRepository.forgotPassword(_emailController.text);
+                                                    if (_emailController
+                                                        .text.isNotEmpty) {
+                                                      _userRepository
+                                                          .forgotPassword(
+                                                              _emailController
+                                                                  .text);
                                                     }
                                                     Navigator.of(context).pop();
                                                   },
@@ -320,16 +321,6 @@ class _OtherMethodsState extends State<OtherMethods> {
                         FacebookSignInButton(
                           borderRadius: 5,
                           onPressed: () {
-                            Scaffold.of(context).showSnackBar(SnackBar(
-                              content: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  Text("Iniciando Sesión"),
-                                  CircularProgressIndicator()
-                                ],
-                              ),
-                            ));
                             BlocProvider.of<LoginBloc>(context)
                                 .add(LoginWithFacebook());
                           },
@@ -338,16 +329,6 @@ class _OtherMethodsState extends State<OtherMethods> {
                         GoogleSignInButton(
                           borderRadius: 5,
                           onPressed: () {
-                            Scaffold.of(context).showSnackBar(SnackBar(
-                              content: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  Text("Iniciando Sesión"),
-                                  CircularProgressIndicator()
-                                ],
-                              ),
-                            ));
                             BlocProvider.of<LoginBloc>(context)
                                 .add(LoginWithGoogle());
                           },

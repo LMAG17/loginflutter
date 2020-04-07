@@ -9,6 +9,9 @@ abstract class ProfileEvent extends Equatable {
 }
 
 //Show profile info
+class LoadProviders extends ProfileEvent {}
+
+//Show profile info
 class ChangeToProfileContent extends ProfileEvent {}
 
 //Update info
@@ -43,6 +46,42 @@ class ChangePassword extends ProfileEvent {
   @override
   String toString() {
     return 'ChangePassword {email:$email,oldpassword:$oldPassword,newpassword:$newPassword}';
+  }
+}
+
+class LinkWithCredentials extends ProfileEvent {
+  final String provider;
+
+  LinkWithCredentials(this.provider);
+  @override
+  List<Object> get props => [provider];
+  @override
+  String toString() {
+    return 'LinkWithCredentials {provider:$provider}';
+  }
+}
+
+class UnLinkWithCredentials extends ProfileEvent {
+  final String provider;
+
+  UnLinkWithCredentials(this.provider);
+  @override
+  List<Object> get props => [provider];
+  @override
+  String toString() {
+    return 'UnLinkWithCredentials {provider:$provider}';
+  }
+}
+
+class ReAuthentication extends ProfileEvent {
+  final String provider;
+  final String confirmPassword;
+  ReAuthentication( this.confirmPassword,this.provider,);
+  @override
+  List<Object> get props => [confirmPassword,provider];
+  @override
+  String toString() {
+    return 'ReAuthentication {provider:$provider}';
   }
 }
 

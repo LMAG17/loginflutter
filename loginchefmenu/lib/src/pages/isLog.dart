@@ -1,7 +1,5 @@
 import 'dart:io';
-
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_auth_buttons/flutter_auth_buttons.dart';
@@ -22,19 +20,13 @@ class IsLog extends StatefulWidget {
 }
 
 class _IsLogState extends State<IsLog> {
-  bool faceLink = false;
-  bool googleLink = false;
-  FirebaseAuth _auth = FirebaseAuth.instance;
   TextStyle style = TextStyle(fontSize: 18, fontWeight: FontWeight.bold);
   TextStyle style2 = TextStyle(
     fontSize: 20,
   );
-  ProfileBloc _profileBloc;
-  String name;
   String url;
   File foto;
-  UserUpdateInfo updateinfo = UserUpdateInfo();
-
+  String confirmPassword;
   getImage(ImageSource origen) async {
     foto = await ImagePicker.pickImage(source: origen);
     if (foto != null) {}
@@ -64,8 +56,8 @@ class _IsLogState extends State<IsLog> {
     return url;
   }
 
-  bool isEditable() {
-    return foto != null || name != null;
+  bool isEditable(EditProfileContent state) {
+    return foto != null || state.updateinfo.displayName != null;
   }
 
   String oldPassword;
@@ -76,31 +68,147 @@ class _IsLogState extends State<IsLog> {
     return newPasswordOne != null && newPasswordOne == newPasswordTwo;
   }
 
-  _showError(BuildContext context, String message) {
-    Scaffold.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Row(
-            children: <Widget>[Text(message)],
-          ),
-        ),
-      );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ProfileBloc, ProfileState>(
+    return BlocConsumer<ProfileBloc, ProfileState>(
       listener: (context, state) {
-        print(state);
-        if (state is FailurePassword) {
-          _showError(context, state.message);
-        }
+        if (state is Success) {
+          BlocProvider.of<ProfileBloc>(context).add(ChangeToProfileContent());
+        } else if (state is Loading) {
+          Scaffold.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("Por favor espera..."),
+                    CircularProgressIndicator(),
+                  ],
+                ),
+              ),
+            );
+        } else if (state is Failure) {
+          if (state.provider != null) {
+            reAuth() {
+              BlocProvider.of<ProfileBloc>(context)
+                  .add(ReAuthentication(confirmPassword,'facebook.com'));
+            }
 
-        if (state is TakePhotoAction) {}
+            showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: Text(
+                        "Estamos seguros que eres tu, solamente debemos confirmar"),
+                    content: Form(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: TextFormField(
+                              onChanged: (v) {
+                                confirmPassword = v;
+                              },
+                              decoration: InputDecoration(
+                                icon: Icon(Icons.lock_outline),
+                                labelText: 'Contraseña',
+                                border: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.green),
+                                  borderRadius: const BorderRadius.all(
+                                    const Radius.circular(32.0),
+                                  ),
+                                ),
+                                filled: true,
+                                hintStyle: TextStyle(color: Colors.grey[800]),
+                                fillColor: Colors.white70,
+                              ),
+                              obscureText: true,
+                              autovalidate: true,
+                              autocorrect: false,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: RaisedButton(
+                              child: Text("Aceptar"),
+                              onPressed: () {
+                                reAuth();
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  );
+                });
+          } else {
+            Scaffold.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(
+                  content: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Text(state.message),
+                      Icon(Icons.error),
+                    ],
+                  ),
+                  backgroundColor: Colors.red,
+                ),
+              );
+          }
+        } else if (state is TakePhotoActionState) {
+          Widget cameraButton = FlatButton(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Icon(Icons.camera),
+                Text("Camara"),
+              ],
+            ),
+            onPressed: () {
+              getImage(ImageSource.camera);
+              Navigator.pop(context);
+            },
+          );
+          Widget galleryButton = FlatButton(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Icon(Icons.camera_roll),
+                Text("Galeria"),
+              ],
+            ),
+            onPressed: () {
+              getImage(ImageSource.gallery);
+              Navigator.pop(context);
+            },
+          );
+          AlertDialog alerta = AlertDialog(
+            title: Text("Seleccionar una imagen"),
+            content: Text("¿De donde desea seleccionar su imagen?"),
+            actions: [
+              cameraButton,
+              galleryButton,
+            ],
+          );
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return alerta;
+            },
+          );
+        }
       },
-      child: BlocBuilder<ProfileBloc, ProfileState>(
-          builder: (BuildContext context, ProfileState state) {
+      buildWhen: (previous, state) {
+        return !(state is TakePhotoActionState) &&
+            !(state is Failure) &&
+            !(state is Loading);
+      },
+      builder: (BuildContext context, ProfileState state) {
         if (state is ProfileContent) {
           return SingleChildScrollView(
             child: Container(
@@ -293,23 +401,33 @@ class _IsLogState extends State<IsLog> {
                       SizedBox(height: 8),
                       FacebookSignInButton(
                         borderRadius: 5,
-                        onPressed: () {
-                          UserRepository().loginWithFacebook();
-                          setState(() {});
-                        },
-                        text: faceLink
+                        onPressed: state.faceLink
+                            ? () {
+                                BlocProvider.of<ProfileBloc>(context)
+                                    .add(UnLinkWithCredentials('facebook.com'));
+                              }
+                            : () {
+                                BlocProvider.of<ProfileBloc>(context)
+                                    .add(LinkWithCredentials('facebook.com'));
+                              },
+                        text: state.faceLink
                             ? "Desvincular de Facebook"
                             : "Continuar con Facebook",
                       ),
                       GoogleSignInButton(
                         borderRadius: 5,
-                        onPressed: () async {
-                          UserRepository().signInWithGoogle();
-                          setState(() {});
-                        },
-                        text: googleLink
-                            ? "Desvincular de Google"
-                            : "Continuar con Google",
+                        onPressed: state.googleLink
+                            ? () {
+                                BlocProvider.of<ProfileBloc>(context)
+                                    .add(UnLinkWithCredentials('google.com'));
+                              }
+                            : () {
+                                BlocProvider.of<ProfileBloc>(context)
+                                    .add(LinkWithCredentials('google.com'));
+                              },
+                        text: state.googleLink
+                            ? "   Desvincular de Google   "
+                            : "   Continuar con Google   ",
                       ),
                       RaisedButton(
                         textColor: Colors.white,
@@ -358,8 +476,7 @@ class _IsLogState extends State<IsLog> {
               ),
             ),
           );
-        }
-        if (state is EditProfileContent) {
+        } else if (state is EditProfileContent) {
           return SingleChildScrollView(
             child: Container(
               height: MediaQuery.of(context).size.height,
@@ -385,31 +502,37 @@ class _IsLogState extends State<IsLog> {
                       child: Container(
                         height: 160,
                         width: 160,
-                        child: CachedNetworkImage(
-                          imageUrl: "${state.photoUrl}",
-                          imageBuilder: (context, imageProvider) => Container(
-                            decoration: BoxDecoration(
-                              image: DecorationImage(
-                                image: imageProvider,
-                                fit: BoxFit.cover,
+                        child: foto != null
+                            ? CircleAvatar(
+                                backgroundImage: AssetImage(foto.path),
+                              )
+                            : CachedNetworkImage(
+                                imageUrl: "${state.photoUrl}",
+                                imageBuilder: (context, imageProvider) =>
+                                    Container(
+                                  decoration: BoxDecoration(
+                                    image: DecorationImage(
+                                      image: imageProvider,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                                placeholder: (context, url) =>
+                                    Shimmer.fromColors(
+                                  baseColor: Colors.grey.shade300,
+                                  highlightColor: Colors.white,
+                                  child: Container(
+                                    height: 160,
+                                    width: 160,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(180),
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) =>
+                                    Icon(Icons.error),
                               ),
-                            ),
-                          ),
-                          placeholder: (context, url) => Shimmer.fromColors(
-                            baseColor: Colors.grey.shade300,
-                            highlightColor: Colors.white,
-                            child: Container(
-                              height: 160,
-                              width: 160,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(180),
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                          errorWidget: (context, url, error) =>
-                              Icon(Icons.error),
-                        ),
                       ),
                     ),
                   ),
@@ -450,7 +573,7 @@ class _IsLogState extends State<IsLog> {
                               ),
                               onChanged: (v) {
                                 setState(() {
-                                  name = v;
+                                  state.updateinfo.displayName = v;
                                 });
                               },
                             ),
@@ -496,18 +619,21 @@ class _IsLogState extends State<IsLog> {
                                     style: TextStyle(fontSize: 24),
                                   ),
                                 ),
-                                onPressed: isEditable()
+                                onPressed: isEditable(state)
                                     ? () async {
-                                        if (name != null) {
-                                          updateinfo.displayName = name;
+                                        if (state.updateinfo.displayName !=
+                                            null) {
+                                          state.updateinfo.displayName =
+                                              state.updateinfo.displayName;
                                         }
                                         if (foto != null) {
-                                          updateinfo.photoUrl =
-                                              await uploadImage();
+                                          state
+                                            ..updateinfo.photoUrl =
+                                                await uploadImage();
                                         }
                                         BlocProvider.of<ProfileBloc>(context)
                                             .add(UpdateUserProfile(
-                                                userinfo: updateinfo));
+                                                userinfo: state.updateinfo));
                                       }
                                     : null,
                               ),
@@ -518,51 +644,12 @@ class _IsLogState extends State<IsLog> {
                     ),
                   ),
                   Positioned(
-                    top: MediaQuery.of(context).size.height * 0.28,
-                    left: MediaQuery.of(context).size.width * 0.33,
+                    top: MediaQuery.of(context).size.height * 0.21,
+                    left: MediaQuery.of(context).size.width * 0.3,
                     child: GestureDetector(
                       onTap: () {
-                        Widget cameraButton = FlatButton(
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              Icon(Icons.camera),
-                              Text("Camara"),
-                            ],
-                          ),
-                          onPressed: () {
-                            getImage(ImageSource.camera);
-                            Navigator.pop(context);
-                          },
-                        );
-                        Widget galleryButton = FlatButton(
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              Icon(Icons.camera_roll),
-                              Text("Galeria"),
-                            ],
-                          ),
-                          onPressed: () {
-                            getImage(ImageSource.gallery);
-                            Navigator.pop(context);
-                          },
-                        );
-                        AlertDialog alerta = AlertDialog(
-                          title: Text("Seleccionar una imagen"),
-                          content:
-                              Text("¿De donde desea seleccionar su imagen?"),
-                          actions: [
-                            cameraButton,
-                            galleryButton,
-                          ],
-                        );
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return alerta;
-                          },
-                        );
+                        BlocProvider.of<ProfileBloc>(context)
+                            .add(TakePhotoAction());
                       },
                       child: Container(
                         width: 50,
@@ -604,8 +691,7 @@ class _IsLogState extends State<IsLog> {
               ),
             ),
           );
-        }
-        if (state is EditPassword  ) {
+        } else if (state is EditPassword) {
           return SingleChildScrollView(
             child: Container(
               height: MediaQuery.of(context).size.height,
@@ -839,8 +925,18 @@ class _IsLogState extends State<IsLog> {
               ),
             ),
           );
+        } else if (state is ProfileInitial) {
+          print('lo hace ');
+          BlocProvider.of<ProfileBloc>(context).add(LoadProviders());
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        } else {
+          return Center(
+            child: CircularProgressIndicator(),
+          );
         }
-      }),
+      },
     );
   }
 

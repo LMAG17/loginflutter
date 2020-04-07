@@ -23,7 +23,7 @@ class UserRepository {
         _facebookLogin = facebookLogin ?? FacebookLogin();
 
   //SignInWithGoogle
-  Future<void> signInWithGoogle() async {
+  Future<FirebaseUser> signInWithGoogle() async {
     //Utilizar el metodod de google para obtener el usuario del pop up
     final GoogleSignInAccount googleUser = await _googleSignIn.signIn();
     //autenticacion de inicio de sesion
@@ -50,35 +50,7 @@ class UserRepository {
           })
               //Aqui debe informar al usuario que se produjo un error
               .catchError((e) {
-            switch (e.code) {
-              case "ERROR_WEAK_PASSWORD": //- If the password is not strong enough.
-                throw ('Error');
-                break;
-              case "ERROR_INVALID_CREDENTIAL": //- If the credential is malformed or has expired.
-                throw ('Error');
-                break;
-              case "ERROR_EMAIL_ALREADY_IN_USE": //- If the email is already in use by a different account.
-                throw ('Error');
-                break;
-              case "ERROR_CREDENTIAL_ALREADY_IN_USE": //- If the account is already in use by a different account, e.g. with phone auth.
-                throw ('Error');
-                break;
-              case "ERROR_USER_DISABLED": //- If the user has been disabled (for example, in the Firebase console)
-                throw ('Error');
-                break;
-              case "ERROR_REQUIRES_RECENT_LOGIN": //- If the user's last sign-in time does not meet the security threshold. Use reauthenticate methods to resolve.
-                throw ('Error');
-                break;
-              case "ERROR_PROVIDER_ALREADY_LINKED": //- If the current user already has an account of this type linked.
-                throw ('Error');
-                break;
-              case "ERROR_OPERATION_NOT_ALLOWED": //- Indicates that this type of account is not enabled.
-                throw ('Error');
-                break;
-              case "ERROR_INVALID_ACTION_CODE": //- If the action code in the link is malformed, expired, or has already been used.
-                throw ('Error');
-                break;
-            }
+            throw (e.code);
           });
         }
         //en caso de que el email no sea el mismo
@@ -97,8 +69,8 @@ class UserRepository {
             //En caso de que el email este vinculado, validar que este vinculado con google
             if (value.contains("google.com")) {
               //En caso de que sea exitoso (Se debe informar al usuario) todo
-              await _auth.signInWithCredential(credential).then((value) {
-                return _auth.currentUser();
+              await _auth.signInWithCredential(credential).then((value)  {
+                return value.user;
               });
             }
             //En caso de que el correo este vinculado pero no con la cuenta de google  (Se debe informar al usuario) todo
@@ -116,7 +88,7 @@ class UserRepository {
   }
 
   //SignInWithFacebook
-  Future<void> loginWithFacebook() async {
+  Future<FirebaseUser> loginWithFacebook() async {
     //Utilizar el metodo del proveedor de faceboook para obtener los datos de inicio de sesion
     FacebookLoginResult result =
         await _facebookLogin.logIn(['email', 'public_profile']);
@@ -143,26 +115,7 @@ class UserRepository {
             })
                 //En caso de que salga fallido (Se debe informar al usuario) todo
                 .catchError((e) {
-              switch (e.code) {
-                case "ERROR_WEAK_PASSWORD": //- If the password is not strong enough.
-                  break;
-                case "ERROR_INVALID_CREDENTIAL": //- If the credential is malformed or has expired.
-                  break;
-                case "ERROR_EMAIL_ALREADY_IN_USE": //- If the email is already in use by a different account.
-                  break;
-                case "ERROR_CREDENTIAL_ALREADY_IN_USE": //- If the account is already in use by a different account, e.g. with phone auth.
-                  break;
-                case "ERROR_USER_DISABLED": //- If the user has been disabled (for example, in the Firebase console)
-                  break;
-                case "ERROR_REQUIRES_RECENT_LOGIN": //- If the user's last sign-in time does not meet the security threshold. Use reauthenticate methods to resolve.
-                  break;
-                case "ERROR_PROVIDER_ALREADY_LINKED": //- If the current user already has an account of this type linked.
-                  break;
-                case "ERROR_OPERATION_NOT_ALLOWED": //- Indicates that this type of account is not enabled.
-                  break;
-                case "ERROR_INVALID_ACTION_CODE": //- If the action code in the link is malformed, expired, or has already been used.
-                  break;
-              }
+              throw (e.code);
             });
           }
           //En caso de que este intentando iniciar sesion
@@ -178,8 +131,8 @@ class UserRepository {
                 //En caso de que este enlazado con facebook
                 if (value.contains("facebook.com")) {
                   //Se realiza el inicio de sesion
-                  await _auth.signInWithCredential(authCredential).then((user) {
-                    return _auth.currentUser();
+                  await _auth.signInWithCredential(authCredential).then((user) async {
+                    return user.user;
                   });
                 }
                 //En caso de que el email no se encuentre enlazado
@@ -348,7 +301,7 @@ class UserRepository {
     _auth
         .sendPasswordResetEmail(email: email)
         .then((onValue) => print('Mensaje enviado exitosamente'))
-        .catchError((onError) => throw (onError));
+        .catchError((onError) => throw (onError.code));
   }
 
   //Cambio de contraseña
@@ -356,11 +309,13 @@ class UserRepository {
       String email, String oldPassword, String newPassword) async {
     final AuthResult result = await _auth
         .signInWithEmailAndPassword(email: email, password: oldPassword)
-        .catchError((e) => throw (e));
+        .catchError((e) =>
+            throw ('Error al cambiar contraseña, intenta probando con la correcta'));
     return await result.user
         .updatePassword(newPassword)
         .then((onValue) => print('cambio de contraseña exitoso'))
-        .catchError((onError) => throw (onError));
+        .catchError((onError) =>
+            throw ('Error al cambiar contraseña, intenta probando con la correcta'));
   }
 
   //Actualizar informacion del usuario
@@ -372,5 +327,22 @@ class UserRepository {
         .catchError((e) {
       print('Aqui se presenta un error' + e);
     }));
+  }
+
+  //Obtener Proveedores
+  Future<List<String>> getProviders(String email) async {
+    List<String> providers =
+        await _auth.fetchSignInMethodsForEmail(email: email).catchError((e) {
+      throw (e.code);
+    });
+    return providers;
+  }
+
+  //Desvilcular proveedores
+  unLinkProvider(provider) async {
+    final FirebaseUser user = await getUser();
+    user.unlinkFromProvider(provider).catchError((e) {
+      throw (e.code);
+    });
   }
 }

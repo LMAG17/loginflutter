@@ -7,7 +7,6 @@ import 'package:loginchefmenu/src/pages/utils/flutter_country_picker.dart';
 import 'package:loginchefmenu/src/pages/utils/input_formater.dart';
 import 'package:loginchefmenu/src/pages/utils/pinInput.dart';
 import 'package:loginchefmenu/src/repository/user_repository.dart';
-import 'package:loginchefmenu/src/ui/other_methods_screen.dart';
 
 import 'utils/createBackground.dart';
 
@@ -306,11 +305,7 @@ class _PhoneNumberPageState extends State<PhoneNumberPage> {
                         right: MediaQuery.of(context).size.width * 0.16,
                         child: GestureDetector(
                           onTap: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => OtherMethodsScreen(
-                                        userRepository: _userRepository)));
+                            BlocProvider.of<AuthenticationBloc>(context).add(OtherMethods());
                           },
                           child: Text(
                             "Ingresar con otro metodo",

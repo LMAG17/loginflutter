@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 abstract class ProfileState extends Equatable {
   const ProfileState();
@@ -7,15 +8,6 @@ abstract class ProfileState extends Equatable {
 }
 
 class ProfileInitial extends ProfileState {
-  final String name;
-  final String photoUrl;
-  final String title;
-  final String email;
-  final String phoneNumber;
-
-  const ProfileInitial(
-      this.name, this.photoUrl, this.title, this.email, this.phoneNumber);
-  @override
   String toString() => 'Estado de carga de datos';
 }
 
@@ -25,8 +17,10 @@ class ProfileContent extends ProfileState {
   final String title;
   final String email;
   final String phoneNumber;
-  ProfileContent(
-      this.name, this.photoUrl, this.title, this.email, this.phoneNumber);
+  final bool faceLink;
+  final bool googleLink;
+  ProfileContent(this.name, this.photoUrl, this.title, this.email,
+      this.phoneNumber, this.faceLink, this.googleLink);
   @override
   String toString() => 'Contenido del pefil';
 }
@@ -35,8 +29,8 @@ class EditProfileContent extends ProfileState {
   final String name;
   final String photoUrl;
   final String title;
-
-  EditProfileContent(this.name, this.photoUrl, this.title);
+  final UserUpdateInfo updateinfo;
+  EditProfileContent(this.name, this.photoUrl, this.title, this.updateinfo);
   @override
   String toString() => 'Editar contenido del pefil';
 }
@@ -56,29 +50,17 @@ class EditPassword extends ProfileState {
   String toString() => 'Editar Contraseña';
 }
 
-class FailurePassword extends ProfileState {
-  final String name;
-  final String photoUrl;
-  final String title;
-  final String email;
+class Failure extends ProfileState {
   final String message;
-  FailurePassword( {
-    this.name,
-    this.photoUrl,
-    this.title,
-    this.email,
+  final String provider;
+  Failure({
+    this.provider,
     this.message,
   });
   @override
-  String toString() => 'Editar Contraseña';
+  String toString() => 'Fallo ';
 }
 
-class ErrorState extends ProfileState {
-  final String message;
-
-  ErrorState({this.message});
-  String toString() => 'Error $message';
-}
 class Success extends ProfileState {
   String toString() => 'Satisfactorio  ';
 }
@@ -86,6 +68,5 @@ class Success extends ProfileState {
 class Loading extends ProfileState {
   String toString() => 'Satisfactorio  ';
 }
-
 
 class TakePhotoActionState extends ProfileState {}
