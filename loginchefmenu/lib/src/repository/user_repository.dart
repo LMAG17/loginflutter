@@ -260,6 +260,7 @@ class UserRepository {
 
   //Inicio se sesion
   Future<void> logInEmail(String email, String password) {
+    print('Email:{$email} Password: {$password]');
     return _auth.signInWithEmailAndPassword(email: email, password: password);
   }
 

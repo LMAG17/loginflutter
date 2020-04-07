@@ -86,3 +86,7 @@ class ReAuthentication extends ProfileEvent {
 }
 
 class TakePhotoAction extends ProfileEvent {}
+
+class TakePhotoActionSuccess extends ProfileEvent {}
+
+class TakePhotoActionDissmis extends ProfileEvent {}

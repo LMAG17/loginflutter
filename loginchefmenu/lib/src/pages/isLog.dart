@@ -12,6 +12,7 @@ import 'package:loginchefmenu/src/pages/utils/createBackground.dart';
 import 'package:loginchefmenu/src/pages/utils/flutter_country_picker.dart';
 import 'package:loginchefmenu/src/pages/utils/shimmer.dart';
 import 'package:loginchefmenu/src/repository/user_repository.dart';
+import 'package:loginchefmenu/src/utils/validators.dart';
 
 class IsLog extends StatefulWidget {
   IsLog({Key key}) : super(key: key);
@@ -26,7 +27,6 @@ class _IsLogState extends State<IsLog> {
   );
   String url;
   File foto;
-  String confirmPassword;
   getImage(ImageSource origen) async {
     foto = await ImagePicker.pickImage(source: origen);
     if (foto != null) {}
@@ -60,11 +60,8 @@ class _IsLogState extends State<IsLog> {
     return foto != null || state.updateinfo.displayName != null;
   }
 
-  String oldPassword;
-  String newPasswordOne;
-  String newPasswordTwo;
-
-  bool isButtonEnable() {
+  bool isButtonEnable(
+      String oldPassword, String newPasswordOne, String newPasswordTwo) {
     return newPasswordOne != null && newPasswordOne == newPasswordTwo;
   }
 
@@ -92,7 +89,7 @@ class _IsLogState extends State<IsLog> {
           if (state.provider != null) {
             reAuth() {
               BlocProvider.of<ProfileBloc>(context)
-                  .add(ReAuthentication(confirmPassword,'facebook.com'));
+                  .add(ReAuthentication(state.confirmPassword, 'facebook.com'));
             }
 
             showDialog(
@@ -109,7 +106,7 @@ class _IsLogState extends State<IsLog> {
                             padding: EdgeInsets.all(8.0),
                             child: TextFormField(
                               onChanged: (v) {
-                                confirmPassword = v;
+                                state.confirmPassword = v;
                               },
                               decoration: InputDecoration(
                                 icon: Icon(Icons.lock_outline),
@@ -124,6 +121,13 @@ class _IsLogState extends State<IsLog> {
                                 hintStyle: TextStyle(color: Colors.grey[800]),
                                 fillColor: Colors.white70,
                               ),
+                              validator: (v) {
+                                if (v != null) {
+                                  return Validators.isValidPassword(v)
+                                      ? null
+                                      : 'Contraseña invalida';
+                                }
+                              },
                               obscureText: true,
                               autovalidate: true,
                               autocorrect: false,
@@ -786,13 +790,18 @@ class _IsLogState extends State<IsLog> {
                                   hintStyle: TextStyle(color: Colors.grey[800]),
                                   fillColor: Colors.white70,
                                 ),
+                                validator: (v) {
+                                  if (state.oldPassword != null) {
+                                    return Validators.isValidPassword(v)
+                                        ? null
+                                        : 'Contraseña invalida';
+                                  }
+                                },
                                 obscureText: true,
                                 autovalidate: true,
                                 autocorrect: false,
                                 onChanged: (v) {
-                                  setState(() {
-                                    oldPassword = v;
-                                  });
+                                  state.oldPassword = v;
                                 },
                               ),
                               SizedBox(
@@ -823,10 +832,15 @@ class _IsLogState extends State<IsLog> {
                                 obscureText: true,
                                 autovalidate: true,
                                 autocorrect: false,
+                                validator: (v) {
+                                  if (state.newPasswordOne != null) {
+                                    return Validators.isValidPassword(v)
+                                        ? null
+                                        : 'Contraseña invalida';
+                                  }
+                                },
                                 onChanged: (v) {
-                                  setState(() {
-                                    newPasswordOne = v;
-                                  });
+                                  state.newPasswordOne = v;
                                 },
                               ),
                               SizedBox(
@@ -857,10 +871,15 @@ class _IsLogState extends State<IsLog> {
                                 obscureText: true,
                                 autovalidate: true,
                                 autocorrect: false,
+                                validator: (v) {
+                                  if (state.newPasswordTwo != null) {
+                                    return v == state.newPasswordOne
+                                        ? null
+                                        : 'Las contraseñas no coinciden';
+                                  }
+                                },
                                 onChanged: (v) {
-                                  setState(() {
-                                    newPasswordTwo = v;
-                                  });
+                                  state.newPasswordTwo = v;
                                 },
                               ),
                               SizedBox(
@@ -882,13 +901,18 @@ class _IsLogState extends State<IsLog> {
                                       style: TextStyle(fontSize: 24),
                                     ),
                                   ),
-                                  onPressed: isButtonEnable()
+                                  onPressed: isButtonEnable(
+                                          state.oldPassword,
+                                          state.newPasswordOne,
+                                          state.newPasswordTwo)
                                       ? () {
                                           BlocProvider.of<ProfileBloc>(context)
                                               .add(ChangePassword(
                                                   email: state.email,
-                                                  oldPassword: oldPassword,
-                                                  newPassword: newPasswordOne));
+                                                  oldPassword:
+                                                      state.oldPassword,
+                                                  newPassword:
+                                                      state.newPasswordOne));
                                         }
                                       : null,
                                 ),
