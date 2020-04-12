@@ -61,6 +61,9 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     if (event is TakePhotoActionSuccess) {
       yield* _mapTakePhotoActionSuccessToState(event.foto);
     }
+     if (event is TakePhotoActionDissmis) {
+      yield TakePhotoActionDissmisState();
+    }
     if (event is UpdateUserProfile) {
       yield* _mapUpdateUserProfileToState(event.name, event.foto);
     }
@@ -82,7 +85,6 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   }
 
   Stream<ProfileState> _mapLoadProviders() async* {
-    yield Loading();
     try {
       print('obteniendo proveedores');
       List provs = await _userRepository.getProviders(email);

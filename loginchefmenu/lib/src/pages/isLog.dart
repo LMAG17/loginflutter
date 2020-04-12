@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flare_flutter/flare_actor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_auth_buttons/flutter_auth_buttons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,7 +25,11 @@ class _IsLogState extends State<IsLog> {
   TextStyle style2 = TextStyle(
     fontSize: 20,
   );
-  String url;
+  @override
+  void initState() { 
+    super.initState();
+    BlocProvider.of<ProfileBloc>(context).add(LoadProviders());
+  }
   Future<File> getImage(ImageSource origen) async {
     return await ImagePicker.pickImage(source: origen);
   }
@@ -99,6 +104,8 @@ class _IsLogState extends State<IsLog> {
                                   return Validators.isValidPassword(v)
                                       ? null
                                       : 'Contraseña invalida';
+                                }else{
+                                  return null;
                                 }
                               },
                               obscureText: true,
@@ -140,6 +147,7 @@ class _IsLogState extends State<IsLog> {
               );
           }
         } else if (state is TakePhotoActionState) {
+          BlocProvider.of<ProfileBloc>(context).add(TakePhotoActionDissmis());
           Widget cameraButton = FlatButton(
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -200,6 +208,7 @@ class _IsLogState extends State<IsLog> {
       },
       buildWhen: (previous, state) {
         return !(state is TakePhotoActionState) &&
+            !(state is TakePhotoActionDissmisState) &&
             !(state is Failure) &&
             !(state is Loading);
       },
@@ -789,7 +798,9 @@ class _IsLogState extends State<IsLog> {
                                     return Validators.isValidPassword(v)
                                         ? null
                                         : 'Contraseña invalida';
-                                  }
+                                  }else{
+                                  return null;
+                                }
                                 },
                                 obscureText: true,
                                 autovalidate: true,
@@ -831,7 +842,9 @@ class _IsLogState extends State<IsLog> {
                                     return Validators.isValidPassword(v)
                                         ? null
                                         : 'Contraseña invalida';
-                                  }
+                                  }else{
+                                  return null;
+                                }
                                 },
                                 onChanged: (v) {
                                   state.newPasswordOne = v;
@@ -870,7 +883,9 @@ class _IsLogState extends State<IsLog> {
                                     return v == state.newPasswordOne
                                         ? null
                                         : 'Las contraseñas no coinciden';
-                                  }
+                                  }else{
+                                  return null;
+                                }
                                 },
                                 onChanged: (v) {
                                   state.newPasswordTwo = v;
@@ -943,15 +958,15 @@ class _IsLogState extends State<IsLog> {
               ),
             ),
           );
-        } else if (state is ProfileInitial) {
-          print('lo hace ');
-          BlocProvider.of<ProfileBloc>(context).add(LoadProviders());
-          return Center(
-            child: CircularProgressIndicator(),
-          );
         } else {
           return Center(
-            child: CircularProgressIndicator(),
+            child: Container(
+              child: FlareActor(
+                'assets/animations/animation.flr',
+                alignment: Alignment.center,
+                animation: "Untitled",
+              ),
+            ),
           );
         }
       },

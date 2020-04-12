@@ -23,7 +23,8 @@ class ProfileContent extends ProfileState {
   final bool googleLink;
   final File foto;
   ProfileContent(this.name, this.photoUrl, this.title, this.email,
-      this.phoneNumber, this.faceLink, this.googleLink,{this.foto});
+      this.phoneNumber, this.faceLink, this.googleLink,
+      {this.foto});
   @override
   String toString() => 'Contenido del pefil';
 }
@@ -86,3 +87,5 @@ class Loading extends ProfileState {
 class TakePhotoActionState extends ProfileState {
   File foto;
 }
+
+class TakePhotoActionDissmisState extends ProfileState {}
