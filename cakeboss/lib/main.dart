@@ -1,4 +1,4 @@
-import 'package:cakeboss/graph.dart';
+import 'package:cakeboss/src/pages/login.dart';
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
@@ -8,7 +8,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final HttpLink httpLink =
-        HttpLink(uri: "https://countries.trevorblades.com/");
+        HttpLink(uri: "http://rickandmortyapi.com/graphql");
     final ValueNotifier<GraphQLClient> client = ValueNotifier<GraphQLClient>(
       GraphQLClient(
         link: httpLink,
@@ -18,9 +18,10 @@ class MyApp extends StatelessWidget {
     return GraphQLProvider(
       client: client,
       child: CacheProvider(
-              child: MaterialApp(
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
           title: 'Graph&Flutter',
-          home: GraphPage(),
+          home: LoginPage(),
         ),
       ),
     );
